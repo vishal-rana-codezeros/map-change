@@ -1,0 +1,30 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: visible !important;
+}
+  
+.logo {
+    display: inline-block;
+    vertical-align: top;
+    width: 150px;
+    height: 40px;
+    margin-right: 5px;
+    margin-left:  5px;
+}
+  
+p1 {
+    font-weight: bold;
+}
+
+#modal-body2 {
+    position: relative;
+    padding: 15px;
+    overflow: auto;
+    height: 400px;
+}
+
+#modal-dialog2 {
+    width: 800px;
+}

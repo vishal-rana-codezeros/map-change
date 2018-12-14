@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Colorado K-12 School Quality Map</title>
+
+  <!-- Calcite Bootstrap -->
+  <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-maps-bootstrap-v0.6.css">
+
+  <!-- Calcite Maps -->
+  <link rel="stylesheet" href="https://esri.github.io/calcite-maps/dist/css/calcite-maps-arcgis-4.x.min-v0.6.css">
+
+  <!-- ArcGIS JS 4.0 -->
+  <link rel="stylesheet" href="https://js.arcgis.com/4.5/esri/css/main.css">
+
+  <!-- JQuery -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+  <!-- StyleSheet -->
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'map/css/style.css' %}" media="screen" title="no title" charset="utf-8">
+
+</head>
+
+<body class="calcite-maps calcite-nav-top">
+
+  <!-- Navbar -->
+
+  <nav class="navbar calcite-navbar navbar-fixed-top calcite-text-dark calcite-bg-light">
+    <!-- Menu -->
+    <div class="dropdown calcite-dropdown calcite-text-dark calcite-bg-light" role="presentation">
+      <a class="dropdown-toggle" role="button" aria-haspopup="true" aria-expanded="false">
+        <div class="calcite-dropdown-toggle">
+          <span class="sr-only">Toggle dropdown menu</span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </a>
+      <ul class="dropdown-menu calcite-menu-drawer">
+        <li>
+          <a role="menuitem" tabindex="0" data-target="#modalSplash" data-toggle="modal" aria-haspopup="true">About</a>
+        </li>
+        <li>
+          <a role="button" data-target="#filterSchools" aria-haspopup="true" id="filterSchoolsLink">
+            <span class="glyphicon glyphicon-filter"></span> Filter Schools</a>
+        </li>
+        <li>
+          <a role="button" data-target="#styleSchools" aria-haspopup="true">
+            <span class="glyphicon glyphicon-adjust"></span> Style Schools</a>
+        </li>
+        <li>
+          <a role="button" data-target="#geoAnalysis" aria-haspopup="true">
+            <span class="glyphicon glyphicon-stats"></span> Geo Analysis</a>
+        </li>
+        <li>
+          <a role="button" data-target="#panelLegend" aria-haspopup="true">
+            <span class="glyphicon glyphicon-list"></span> Legend</a>
+        </li>
+        <li>
+          <a role="button" tabindex="0" data-target="#panelPrint" aria-haspopup="true">
+            <span class="glyphicon glyphicon-print"></span> Print</a>
+        </li>
+        <li>
+          <a role="button" data-target="#panelBasemaps" aria-haspopup="true">
+            <span class="glyphicon glyphicon-th-large"></span> Basemaps</a>
+        </li>
+        <li>
+          <a role="button" id="calciteToggleNavbar" aria-haspopup="true">
+            <span class="glyphicon glyphicon-fullscreen"></span> Full Map</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Title -->
+    <div class="calcite-title calcite-overflow-hidden">
+      <span class="calcite-title-main">
+        <a href="http://coloradoleague.org">
+          <img class="logo" src="{% static 'map/images/logo.jpg' %}">
+        </a>
+      </span>
+      <span class="calcite-title-divider hidden-xs"></span>
+      <span class="calcite-title-main hidden-xs">Colorado School Quality Map</span>
+    </div>
+    <!-- Nav -->
+    <ul class="nav navbar-nav calcite-nav">
+      <li>
+        <div class="calcite-navbar-search">
+          <div id="searchWidgetDiv"></div>
+        </div>
+      </li>
+    </ul>
+  </nav>
+  <!--/.calcite-navbar -->
+
+  <!-- About Panel -->
+  <div class="modal fade" id="modalSplash" tabindex="-1" role="dialog" aria-labelledby="splashlModal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="splash-body">
+                <div class="text-center">
+                  <h3>Welcome!</h3>
+                  <hr>
+                  <p>This application was developed the Colorado League of Charter Schools to help charter school operators,
+                    policymakers, and other education professionals assess need for high-quality K-12 options across the
+                    state.
+                  </p>
+                  <br>
+                  <div class="form-inline">
+                    <div class="form-group">
+                      <a type="button" class="btn btn-primary btn-lg" data-dismiss="modal">Get started</a>
+                    </div>
+                  </div>
+                  <br>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalSchools" class="modal fade">
+    <div class="modal-dialog" id="modal-dialog2">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title">Filtered Schools</h4>
+        </div>
+        <div class="modal-body" id="modal-body2">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>School Code (CDE)</th>
+                <th>School Name</th>
+                <th>School District</th>
+              </tr>
+            </thead>
+            <tbody id="schoolData">
+              <tr>
+                <td scope="row"></td>
+                <td></td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+
+  <!-- Map  -->
+
+  <div class="calcite-map calcite-map-absolute">
+    <div id="tabContainer" class="tab-content">
+      <div id="2dTab" class="tab-pane fade in active" role="tabpanel">
+        <div id="mapViewDiv"></div>
+      </div>
+    </div>
+  </div>
+  <!-- /.calcite-map -->
+
+  <!-- Panels -->
+
+  <div class="calcite-panels calcite-panels-right calcite-text-dark calcite-bg-light panel-group">
+
+    <!-- Filter Schools Panel -->
+
+    <div id="filterSchools" class="panel collapse">
+      <div id="headingfilterSchools" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapseBasemaps" aria-expanded="false" aria-controls="collapsefilterSchools">
+            <span class="glyphicon glyphicon-filter" aria-hidden="true"></span>
+            <span class="panel-label">Filtered Schools</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#filterSchools">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapsefilterSchools" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingfilterSchools">
+        <div class="panel-body">
+          <div class="form-horizontal">
+
+            <!-- School District -->
+
+            <div class="form-group">
+              <label for="schoolDistrict" class="col-xs-12">School District</label>
+              <div class="col-xs-12">
+                <select id="selectDistrict" class="form-control" name="schoolDistrict">
+                  <option value="0">All</option>
+                </select>
+              </div>
+            </div>
+
+
+            <!-- School Level -->
+
+            <div class="form-group">
+              <label for="filterSchoolsSchoolLevel" class="col-xs-12">School Level</label>
+              <div class="col-xs-12">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" value="1" id="selectElementary" checked>Elementary</label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" value="2" id="selectMiddle" checked>Middle</label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" value="3" id="selectHigh" checked>High</Label>
+                </div>
+              </div>
+            </div>
+
+            <!-- SPF Rating -->
+
+            <div class="form-group">
+              <label for="filterSchoolsSPFSchoolRating" class="col-xs-12" checked>SPF Plan (2017-18)</label>
+              <div class="col-xs-12">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectTurnaround" checked>Turnaround</label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectPriorImprov" checked>Priority Improvement</label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectImprov" checked>Improvement</Label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectPerformance" checked>Performance</Label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charter/TPS -->
+
+            <div class="form-group">
+              <label for="filterSchoolsCharterTPS" class="col-xs-12">Charter/Tradition</label>
+              <div class="col-xs-12">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectTPS" checked>TPS</label>
+                </div>
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" id="selectCharters" checked>Charter</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- AECs -->
+
+            <div class="form-group">
+              <label for="filterSchoolsCharterTPS" class="col-xs-12">AECs</label>
+              <div class="col-xs-12">
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="AECRadio" id="includeAEC" checked>Include AECs</label>
+                </div>
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="AECRadio" id="excludeAEC">Exclude AECs</label>
+                </div>
+                <div class="radio">
+                  <label>
+                    <input type="radio" name="AECRadio" id="AECOnly">AEC Only</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Student Subroups -->
+
+            <div class="form-group">
+              <label for="filterSchoolsDemographics" class="col-xs-12">Subgroups</label>
+              <div class="col-xs-12">
+                <div id="slideContainerFRL">
+                  <p>FRL
+                    <span id="valueFRL">0</span>
+                    <span>% to 100%</span>
+                    <input type="range" min="0" max="100" value="0" class="slider" id="sliderFRL">
+                </div>
+                <div id="slideContainterMinority">
+                  <p>Students of Color
+                    <span id="valueMinority">0</span>
+                    <span>% to 100%</span>
+                    <input type="range" min="0" max="100" value="0" class="slider" id="sliderMinority">
+                </div>
+                <div id="slideContainterELL">
+                  <p>ELL
+                    <span id="valueELL">0</span>
+                    <span>% to 100%</span>
+                    <input type="range" min="0" max="100" value="0" class="slider" id="sliderELL">
+                </div>
+                <div id="slideContainterIEP">
+                  <p>IEP
+                    <span id="valueIEP">0</span>
+                    <span>% to 30%</span>
+                    <input type="range" min="0" max="30" value="0" class="slider" id="sliderIEP">
+                </div>
+              </div>
+            </div>
+
+            <!-- 2016-17 SPF Slider -->
+
+            <div class="form-group">
+              <label for="filterSchoolsDemographics" class="col-xs-12">2016-17 SPF %</label>
+              <div class="col-xs-12">
+                <div id="slideContainerSPF">
+                  <p>SPF Score
+                    <span id="valueSPF">0</span>
+                    <span>% to 100%</span>
+                    <input type="range" min="0" max="100" value="0" class="slider" id="sliderSPF">
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-12">
+                <a role="button" id="schoolList" class="btn btn-primary btn-block" data-target="#modalSchools" data-toggle="modal" aria-haspopup="true">School List</a>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-12">
+                <button type="button" id="resetfilter" class="btn btn-warning btn-block">Reset Filter</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Style Schools Panel-->
+
+    <div id="styleSchools" class="panel collapse">
+      <div id="headingstyleSchools" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapsestyleSchools" aria-expanded="false"
+            aria-controls="collapsestyleSchools">
+            <span class="glyphicon glyphicon-adjust" aria-hidden="true"></span>
+            <span class="panel-label">Style Schools</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#styleSchools">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapsestyleSchools" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingstyleSchools">
+        <div class="panel-body">
+          <div class="form-horizontal">
+
+            <!-- Select Size / Color Variables -->
+
+            <div class="form-group">
+              <label for="geoAnalysisGeography" class="col-xs-3 control-label">Color/Shape</label>
+              <div class="col-xs-9">
+                <select id="styleSchoolsColor" class="form-control" name="styleSchoolsColor">
+                  <option data-textcolor="calcite-text-light" value="1" data-bgcolor="calcite-bg-dark" selected>None</option>
+                  <option data-textcolor="calcite-text-light" value="2" data-bgcolor="calcite-bg-dark">SPF Plan</option>
+                  <option data-textcolor="calcite-text-light" value="3" data-bgcolor="calcite-bg-dark">SPF Score</option>
+                  <option data-textcolor="calcite-text-light" value="4" data-bgcolor="calcite-bg-dark">Charter/TPS</option>
+                  <option data-textcolor="calcite-text-light" value="5" data-bgcolor="calcite-bg-dark">Grade Level</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="geoAnalysisGeography" class="col-xs-3 control-label">Size</label>
+              <div class="col-xs-9">
+                <select class="form-control" id="styleSchoolsSize" name="styleSchoolsSize">
+                  <option data-textcolor="calcite-text-light" value="1" data-bgcolor="calcite-bg-dark" selected>None</option>
+                  <option data-textcolor="calcite-text-light" value="2" data-bgcolor="calcite-bg-dark">Enrollment</option>
+                  <option data-textcolor="calcite-text-light" value="3" data-bgcolor="calcite-bg-dark">FRL Enrollment</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-12">
+                <button class="btn btn-primary btn-block btn-large" id="applySchoolStyle">Apply</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-12">
+                <button class="btn btn-warning btn-block btn-large" id="resetStyle">Reset Style</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GeoAnalysis Panel -->
+
+    <div id="geoAnalysis" class="panel collapse">
+      <div id="headinggeoAnalysis" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapsegeoAnalysis" aria-expanded="false"
+            aria-controls="collapsegeoAnalysis">
+            <span class="glyphicon glyphicon-stats" aria-hidden="true"></span>
+            <span class="panel-label">Geo Analysis</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#geoAnalysis">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapsegeoAnalysis" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headinggeoAnalysis">
+        <div class="panel-body">
+          <div class="form-horizontal">
+
+            <!-- Select Geography -->
+
+            <div class="form-group">
+              <label for="geoAnalysisGeography" class="col-xs-3 control-label">Geography</label>
+              <div class="col-xs-9">
+                <select class="form-control" id="geo" name="geoSelection">
+                  <option value="1" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark" selected>None</option>
+                  <option value="2" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark" selected>School Districts</option>
+                  <option value="3" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Cities/Towns</option>
+                  <option value="4" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Census Tracts</option>
+                  <option value="5" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">State House Districts</option>
+                  <option value="6" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">State Senate Districts</option>
+                  <option value="7" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">US House District</option>
+                </select>
+              </div>
+            </div>
+
+
+            <!-- Select Variable -->
+
+            <div class="form-group">
+              <label for="geoAnalysisGeography" class="col-xs-3 control-label">Style By</label>
+              <div class="col-xs-9">
+                <select class="form-control" id="geoStyle" name="geoStyleSelection">
+                  <option value="1" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark" selected>Geography Only</option>
+                  <option value="2" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Median HH Income</option>
+                  <option value="3" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">K-12 Poverty</option>
+                  <option value="4" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Quality Seats Needed - Elem</option>
+                  <option value="5" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Quality Seats Needed - Middle</option>
+                  <option value="6" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Quality Seats Needed - High</option>
+                  <option value="7" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">Population Growth</option>
+                  <option value="8" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">PPR</option>
+                  <option value="9" data-textcolor="calcite-text-light" data-bgcolor="calcite-bg-dark">District Performance Plan</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="col-xs-12">
+                <button class="btn btn-primary btn-block btn-large" id="applyGeoStyle">Apply</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="col-xs-12">
+                <button class="btn btn-warning btn-block btn-large" id="resetGeoStyle">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel - Legend -->
+
+    <div id="panelLegend" class="panel collapse in">
+      <div id="headingLegend" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle" role="button" data-toggle="collapse" href="#collapseLegend" aria-expanded="false" aria-controls="collapseLegend">
+            <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+            <span class="panel-label">Legend</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#panelLegend">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapseLegend" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingLegend">
+        <div class="panel-body">
+          <div id="legendDiv"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Print -->
+
+    <div id="panelPrint" class="panel collapse">
+      <div id="headingPrint" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapsePrint" aria-expanded="false" aria-controls="collapsePrint">
+            <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
+            <span class="panel-label">Print</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#panelPrint">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapsePrint" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingPrint">
+        <div class="panel-body">
+          <div id="printDiv"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Basemaps Panel -->
+
+    <div id="panelBasemaps" class="panel collapse">
+      <div id="headingBasemaps" class="panel-heading" role="tab">
+        <div class="panel-title">
+          <a class="panel-toggle collapsed" role="button" data-toggle="collapse" href="#collapseBasemaps" aria-expanded="false" aria-controls="collapseBasemaps">
+            <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span>
+            <span class="panel-label">Basemaps</span>
+          </a>
+          <a class="panel-close" role="button" data-toggle="collapse" data-target="#panelBasemaps">
+            <span class="esri-icon esri-icon-close" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+      <div id="collapseBasemaps" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingBasemaps">
+        <div class="panel-body">
+          <select id="selectBasemapPanel" class="form-control">
+            <option value="streets" data-vector="streets-vector">Streets</option>
+            <option value="satellite" data-vector="satellite" selected="">Satellite</option>
+            <option value="hybrid" data-vector="hybrid">Hybrid</option>
+            <option value="national-geographic" data-vector="national-geographic">National Geographic</option>
+            <option value="topo" data-vector="topo-vector">Topographic</option>
+            <option value="gray" data-vector="gray-vector">Gray</option>
+            <option value="dark-gray" data-vector="dark-gray-vector">Dark Gray</option>
+            <option value="osm" data-vector="osm">Open Street Map</option>
+            <option value="dark-gray" data-vector="streets-night-vector">Streets Night</option>
+            <option value="streets" data-vector="streets-navigation-vector">Streets Mobile</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- /.calcite-panels -->
+
+    <!-- Calcite JS -->
+    <script src="./calcite.js"></script>
+
+    <!-- ArcGIS JS 4.6 -->
+    <script src="https://js.arcgis.com/4.6/"></script>
+
+    <!-- Map JS file -->
+    <script src="./script.js"></script>
+
+</body>
+
+</html>
